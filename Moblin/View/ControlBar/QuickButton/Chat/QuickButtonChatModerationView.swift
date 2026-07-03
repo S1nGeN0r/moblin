@@ -501,6 +501,33 @@ struct NavigationLinkView<Content: View>: View {
     }
 }
 
+private struct VkVideoLiveView: View {
+    let model: Model
+    @Binding var platform: Platform?
+
+    private func slowModeAction(duration: Int?, onComplete: @escaping (OperationResult) -> Void) {
+        model.setVkVideoLiveSlowMode(messageInterval: duration, onComplete: onComplete)
+    }
+
+    var body: some View {
+        NavigationLink {
+            Form {
+                Section {
+                    SlowModeView(durations: [3, 5, 10, 30, 60, 120, 300], action: slowModeAction)
+                    EmotesOnlyView(action: model.setVkVideoLiveEmoteOnlyMode)
+                } footer: {
+                    Text("The VK Video Live API does not support message deletion, bans or timeouts.")
+                }
+            }
+            .navigationTitle("VK Video Live")
+            .onAppear {
+                platform = .vkVideoLive
+            }
+        } label: {
+            VkVideoLiveLogoAndNameView()
+        }
+    }
+}
 struct QuickButtonChatModerationView: View {
     @ObservedObject var model: Model
     @Binding var presentingModeration: Bool
@@ -512,6 +539,7 @@ struct QuickButtonChatModerationView: View {
                 Section {
                     QuickButtonChatModerationTwitchView(model: model, platform: $platform)
                     QuickButtonChatModerationKickView(model: model, platform: $platform)
+                    VkVideoLiveView(model: model, platform: $platform)
                 }
                 ShortcutSectionView {
                     StreamingPlatformsShortcutView(model: model, stream: model.stream)

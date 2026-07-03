@@ -53,6 +53,9 @@ extension Model {
         if isKickPusherConfigured() {
             streamerMentions.append("@\(stream.kickChannelName)")
         }
+        if isVkVideoLiveChatConfigured(), !stream.vkVideoLiveChannelNick.isEmpty {
+            streamerMentions.append("@\(stream.vkVideoLiveChannelNick)")
+        }
         if isSoopChatConfigured() {
             streamerMentions.append("@\(stream.soopChannelName)")
         }

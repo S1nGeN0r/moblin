@@ -112,6 +112,7 @@ extension Model {
     func reloadChats() {
         reloadTwitchChat()
         reloadKickPusher()
+        reloadVkVideoLiveChat()
         reloadYouTubeLiveChat()
         reloadSoopChat()
         reloadOpenStreamingPlatformChat()
@@ -160,6 +161,9 @@ extension Model {
         if isKickPusherConfigured() {
             numberOfChats += 1
         }
+        if isVkVideoLiveChatConfigured() {
+            numberOfChats += 1
+        }
         if isYouTubeLiveChatConfigured() {
             numberOfChats += 1
         }
@@ -174,6 +178,7 @@ extension Model {
 
     func isChatConfigured() -> Bool {
         isTwitchChatConfigured() || isKickPusherConfigured() ||
+            isVkVideoLiveChatConfigured() ||
             isYouTubeLiveChatConfigured() || isSoopChatConfigured() ||
             isOpenStreamingPlatformChatConfigured()
     }
@@ -195,6 +200,9 @@ extension Model {
         if isKickPusherConfigured(), !isKickPusherConnected() {
             return false
         }
+        if isVkVideoLiveChatConfigured(), !isVkVideoLiveChatConnected() {
+            return false
+        }
         if isYouTubeLiveChatConfigured(), !isYouTubeLiveChatConnected() {
             return false
         }
@@ -210,6 +218,7 @@ extension Model {
     func hasChatEmotes() -> Bool {
         hasTwitchChatEmotes()
             || hasKickPusherEmotes()
+            || hasVkVideoLiveChatEmotes()
             || hasYouTubeLiveChatEmotes()
             || hasSoopChatEmotes()
             || hasOpenStreamingPlatformChatEmotes()
@@ -225,6 +234,9 @@ extension Model {
         }
         if stream.kickSendMessagesTo, stream.kickLoggedIn {
             sendKickChatMessage(message: message)
+        }
+        if stream.vkVideoLiveSendMessagesTo, stream.vkVideoLiveLoggedIn {
+            sendVkVideoLiveChatMessage(message: message)
         }
     }
 
@@ -245,6 +257,13 @@ extension Model {
                 sendKickChatMessage(message: message)
             } else {
                 makeNotLoggedInToToast(platform: .kick)
+            }
+        }
+        if stream.vkVideoLiveSendMessagesTo {
+            if stream.vkVideoLiveLoggedIn {
+                sendVkVideoLiveChatMessage(message: message)
+            } else {
+                makeNotLoggedInToVkVideoLiveToast()
             }
         }
     }
@@ -422,6 +441,10 @@ extension Model {
             if isOpenStreamingPlatformChatConfigured() {
                 statuses.append(ChatPlatformStatus(platform: .openStreamingPlatform,
                                                    connected: isOpenStreamingPlatformChatConnected()))
+            }
+            if isVkVideoLiveChatConfigured() {
+                statuses.append(ChatPlatformStatus(platform: .vkVideoLive,
+                                                   connected: isVkVideoLiveChatConnected()))
             }
             if statuses.allSatisfy(\.connected) {
                 status = String(localized: "Connected")

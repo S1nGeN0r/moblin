@@ -865,6 +865,10 @@ final class Model: NSObject, ObservableObject, @unchecked Sendable {
         highQualityDownsampling = database.debug.highQualityDownsampling
     }
 
+    func setMetalPetalFastPaths() {
+        metalPetalFastPaths = database.debug.metalPetalFastPaths
+    }
+
     func makeToast(
         title: String,
         subTitle: String? = nil,
@@ -1014,6 +1018,7 @@ final class Model: NSObject, ObservableObject, @unchecked Sendable {
         fixAlertMediasNoUpdate()
         setAllowVideoRangePixelFormat()
         setHighQualityDownsampling()
+        setMetalPetalFastPaths()
         setExternalDisplayContent()
         portraitVideoOffsetFromTop = database.portraitVideoOffsetFromTop
         loadTextWidgetStopwatches()

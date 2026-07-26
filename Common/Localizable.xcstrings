@@ -1588,7 +1588,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin ai ask <問題>"
+            "value" : "!moblin ai ask <question>"
           }
         },
         "zh-HK" : {
@@ -1730,7 +1730,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin alert <名稱>"
+            "value" : "!moblin alert <name>"
           }
         },
         "zh-HK" : {
@@ -2158,7 +2158,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin gimbal preset <名稱>"
+            "value" : "!moblin gimbal preset <name>"
           }
         },
         "zh-HK" : {
@@ -2302,7 +2302,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin macro <run/cancel> <名稱>"
+            "value" : "!moblin macro <run/cancel> <name>"
           }
         }
       }
@@ -2440,7 +2440,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin macro cancel <名稱>"
+            "value" : "!moblin macro cancel <name>"
           }
         }
       }
@@ -2578,7 +2578,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin macro run <名稱>"
+            "value" : "!moblin macro run <name>"
           }
         }
       }
@@ -2595,80 +2595,80 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin música agregar <canción>"
+            "state" : "translated",
+            "value" : "!moblin music add <canción>"
           }
         },
         "fi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin musiikki lisää <kappale>"
+            "state" : "translated",
+            "value" : "!moblin music add <kappale>"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin musique ajouter <chanson>"
+            "state" : "translated",
+            "value" : "!moblin music add <chanson>"
           }
         },
         "hi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!मोबलिन संगीत जोड़ें <गीत>"
+            "state" : "translated",
+            "value" : "!moblin music add <गीत>"
           }
         },
         "id" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!musik moblin tambahkan <lagu>"
+            "state" : "translated",
+            "value" : "!moblin music add <lagu>"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin music aggiungi <canzone>"
+            "state" : "translated",
+            "value" : "!moblin music add <canzone>"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!Moblin music add <曲>"
+            "state" : "translated",
+            "value" : "!moblin music add <曲>"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin 음악 추가 <노래>"
+            "state" : "translated",
+            "value" : "!moblin music add <노래>"
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin muziek voeg <nummer> toe"
+            "state" : "translated",
+            "value" : "!moblin music add <song>"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin muzyka dodaj <piosenkę>"
+            "state" : "translated",
+            "value" : "!moblin music add <piosenkę>"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin música adicionar <música>"
+            "state" : "translated",
+            "value" : "!moblin music add <música>"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin música adicionar <música>"
+            "state" : "translated",
+            "value" : "!moblin music add <música>"
           }
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin music добавить <песню>"
+            "state" : "translated",
+            "value" : "!moblin music add <песню>"
           }
         },
         "sk" : {
@@ -2685,38 +2685,38 @@
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin müzik <şarkı> ekle"
+            "state" : "translated",
+            "value" : "!moblin music add <şarkı>"
           }
         },
         "uk" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin music додайте <пісню>"
+            "state" : "translated",
+            "value" : "!moblin music add <пісню>"
           }
         },
         "vi" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin nhạc thêm <bài hát>"
+            "state" : "translated",
+            "value" : "!moblin music add <bài hát>"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin 音乐添加<歌曲>"
+            "state" : "translated",
+            "value" : "!moblin music add <歌曲>"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin 音樂新增<歌曲>"
+            "state" : "translated",
+            "value" : "!moblin music add <歌曲>"
           }
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin 音樂新增<歌曲>"
+            "state" : "translated",
+            "value" : "!moblin music add <song>"
           }
         }
       }
@@ -2994,7 +2994,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin say <訊息>"
+            "value" : "!moblin say <message>"
           }
         },
         "zh-HK" : {
@@ -3136,7 +3136,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin scene <名稱>"
+            "value" : "!moblin scene <name>"
           }
         },
         "zh-HK" : {
@@ -3280,7 +3280,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin 發送<訊息>"
+            "value" : "!moblin 發送<message>"
           }
         }
       }
@@ -3423,145 +3423,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "!moblin snapshot <optional message>"
-          }
-        }
-      }
-    },
-    "!moblin spotify add <song>" : {
-      "comment" : "A command to add a song to the queue.",
-      "extractionState" : "stale",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "!moblin spotify add <song>"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify agregar <canción>"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify lisää <kappale>"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin Spotify ajouter <chanson>"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin Spotify ऐड <song>"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify tambahkan <lagu>"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify aggiungi <canzone>"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!MoblinSpotify 追加 <曲>"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin Spotify 추가 <노래>"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify voeg <nummer> toe"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify dodaj <piosenkę>"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify adicionar <música>"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify adicionar <música>"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin Spotify добавить <песню>"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify pridať <skladbu>"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "!moblin spotify add <låt>"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify <şarkı> ekle"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin spotify додайте <пісню>"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin Spotify thêm <song>"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin Spotify 添加<歌曲>"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin Spotify 新增<歌曲>"
-          }
-        },
-        "zh-Hant-TW" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "!moblin Spotify 新增<歌曲>"
           }
         }
       }
@@ -4425,7 +4286,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "!moblin widget <名稱> timer <數字> add <秒數>"
+            "value" : "!moblin widget <name> timer <數字> add <秒數>"
           }
         },
         "zh-HK" : {
@@ -5007,7 +4868,7 @@
         "zh-Hant-TW" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "{%@:<單位>}"
+            "value" : "{%@:<unit>}"
           }
         }
       }
@@ -6032,6 +5893,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ %2$@ 開始播放廣告"
+          }
+        }
+      }
+    },
+    "%@ added to the queue by %@." : {
+      "comment" : "A message sent by the bot when a song is added to the queue. The first argument is the song title. The second argument is the user who added the song.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ added to the queue by %2$@."
           }
         }
       }
@@ -10588,7 +10461,7 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "<song> 是共享連結或文字搜尋。"
           }
         }
@@ -27427,8 +27300,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "將給定歌曲新增至隊列。"
+            "state" : "translated",
+            "value" : "將指定歌曲新增至佇列。"
           }
         }
       }
@@ -33976,6 +33849,7 @@
       }
     },
     "Assistant URL" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -89063,7 +88937,7 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "家庭"
           }
         }
@@ -141153,7 +141027,7 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "下一首。"
           }
         }
@@ -154072,7 +153946,7 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "暫停。"
           }
         }
@@ -155065,6 +154939,10 @@
           }
         }
       }
+    },
+    "Photo shoot" : {
+      "comment" : "Button title to open a photo shoot.",
+      "isCommentAutoGenerated" : true
     },
     "Pinch" : {
       "localizations" : {
@@ -156336,8 +156214,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "玩。"
+            "state" : "translated",
+            "value" : "播放。"
           }
         }
       }
@@ -161156,8 +161034,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "上一首歌曲。"
+            "state" : "translated",
+            "value" : "上一首。"
           }
         }
       }
@@ -179154,6 +179032,14 @@
         }
       }
     },
+    "Save settings" : {
+      "comment" : "A button that saves settings.",
+      "isCommentAutoGenerated" : true
+    },
+    "Saved 😅" : {
+      "comment" : "A label displayed after the user saves their settings.",
+      "isCommentAutoGenerated" : true
+    },
     "Saved networks" : {
       "comment" : "A heading for a list of saved Wi-Fi networks.",
       "isCommentAutoGenerated" : true,
@@ -179291,6 +179177,10 @@
           }
         }
       }
+    },
+    "Saved URLs" : {
+      "comment" : "A label displayed above the list of saved URLs.",
+      "isCommentAutoGenerated" : true
     },
     "Say given message." : {
       "localizations" : {
@@ -190516,7 +190406,7 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "顯示海拔上升"
           }
         }
@@ -190654,8 +190544,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "以給定單位顯示海拔高度"
+            "state" : "translated",
+            "value" : "以指定單位顯示海拔上升"
           }
         }
       }
@@ -190792,8 +190682,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "顯示高度下降"
+            "state" : "translated",
+            "value" : "顯示海拔下降"
           }
         }
       }
@@ -190930,8 +190820,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "以給定單位顯示高度下降"
+            "state" : "translated",
+            "value" : "以指定單位顯示海拔下降"
           }
         }
       }
@@ -197274,8 +197164,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "顯示分割高度上升"
+            "state" : "translated",
+            "value" : "顯示分段海拔上升"
           }
         }
       }
@@ -197412,8 +197302,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "以給定單位顯示分段高度上升"
+            "state" : "translated",
+            "value" : "以指定單位顯示分段海拔上升"
           }
         }
       }
@@ -197550,8 +197440,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "顯示分割高度下降"
+            "state" : "translated",
+            "value" : "顯示分段海拔下降"
           }
         }
       }
@@ -197688,8 +197578,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "以給定單位顯示分割高度下降"
+            "state" : "translated",
+            "value" : "以指定單位顯示分段海拔下降"
           }
         }
       }
@@ -198244,7 +198134,7 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "顯示狀態。"
           }
         }
@@ -204622,143 +204512,6 @@
         }
       }
     },
-    "Spotify" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spotify"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "スポティファイ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "스포티파이"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Спотифай"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        },
-        "zh-Hant-TW" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spotify"
-          }
-        }
-      }
-    },
     "Square" : {
       "localizations" : {
         "de" : {
@@ -206455,8 +206208,8 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "SRT(LA)資料包填充"
+            "state" : "translated",
+            "value" : "SRT(LA) 封包填充"
           }
         }
       }
@@ -216187,7 +215940,7 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "風格"
           }
         }
@@ -220123,7 +219876,7 @@
         },
         "sv" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "System"
           }
         },
@@ -220159,7 +219912,7 @@
         },
         "zh-Hant-TW" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "系統"
           }
         }
@@ -221016,6 +220769,10 @@
           }
         }
       }
+    },
+    "Taking photos periodically" : {
+      "comment" : "A description of the photo shoot feature.",
+      "isCommentAutoGenerated" : true
     },
     "Taking snapshot in" : {
       "localizations" : {

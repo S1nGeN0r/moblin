@@ -412,6 +412,7 @@ final class Model: NSObject, ObservableObject, @unchecked Sendable {
     @Published var stream: SettingsStream = fallbackStream
     @Published var layout: SettingsWidgetLayout?
     @Published var workoutType: WatchProtocolWorkoutType?
+    @Published var photoShootEnabled: Bool = false
 
     var streamState = StreamState.disconnected {
         didSet {
@@ -719,6 +720,7 @@ final class Model: NSObject, ObservableObject, @unchecked Sendable {
     var httpProxyServer: HttpProxyServer?
     var httpProxyPort: Network.NWEndpoint.Port?
     let streamDeck = StreamDeck()
+    let photoShootTimer = SimpleTimer(queue: .main)
 
     weak var processor: Processor? {
         didSet {
@@ -2665,7 +2667,8 @@ final class Model: NSObject, ObservableObject, @unchecked Sendable {
                                            fillFrame: false,
                                            isLandscapeStreamAndPortraitUi: isLandscapeStreamAndPortraitUi(),
                                            forceSceneTransition: false,
-                                           macScreenCapture: false)
+                                           macScreenCapture: false,
+                                           photoShoot: false)
         media.attachCamera(params: params)
     }
 
@@ -2832,7 +2835,8 @@ final class Model: NSObject, ObservableObject, @unchecked Sendable {
             fillFrame: getFillFrame(scene: scene),
             isLandscapeStreamAndPortraitUi: isLandscapeStreamAndPortraitUi(),
             forceSceneTransition: database.forceSceneSwitchTransition,
-            macScreenCapture: sceneNeedsMacScreenCapture(scene: scene)
+            macScreenCapture: sceneNeedsMacScreenCapture(scene: scene),
+            photoShoot: photoShootEnabled
         )
         media.attachCamera(
             params: params,
@@ -2890,7 +2894,8 @@ final class Model: NSObject, ObservableObject, @unchecked Sendable {
             fillFrame: getFillFrame(scene: scene),
             isLandscapeStreamAndPortraitUi: isLandscapeStreamAndPortraitUi(),
             forceSceneTransition: database.forceSceneSwitchTransition,
-            macScreenCapture: sceneNeedsMacScreenCapture(scene: scene)
+            macScreenCapture: sceneNeedsMacScreenCapture(scene: scene),
+            photoShoot: photoShootEnabled
         )
         media.usePendingAfterAttachEffects()
         updateVideoPreviews()

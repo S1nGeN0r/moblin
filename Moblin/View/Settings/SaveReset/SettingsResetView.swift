@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ResetSettingsView: View {
+struct SettingsResetView: View {
     @EnvironmentObject var model: Model
     @State private var presentingResetConfirm: Bool = false
 

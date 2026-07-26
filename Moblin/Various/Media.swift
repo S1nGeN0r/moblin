@@ -42,7 +42,8 @@ protocol MediaDelegate: AnyObject {
     func mediaOnRecorderFinished()
     func mediaOnNoTorch()
     func mediaOnFps(fps: Int)
-    func mediaStrlaRelayDestinationAddress(address: String, port: UInt16)
+    func mediaMoblinkStreamerDestinationAddress(address: String, port: UInt16)
+    func mediaMoblinkStreamerRestartTunnel(relayId: UUID)
     func mediaSetZoomX(x: Float)
     func mediaSetExposureBias(bias: Float)
     func mediaSelectedFps(auto: Bool)
@@ -694,8 +695,8 @@ final class Media: NSObject, @unchecked Sendable {
         processor?.unregisterAllVideoEffects()
     }
 
-    func setPendingAfterAttachEffects(effects: [VideoEffect], rotation: Double) {
-        processor?.setPendingAfterAttachEffects(effects: effects, rotation: rotation)
+    func setPendingAfterAttachEffects(effects: [VideoEffect], rotation: Double, mirror: Bool) {
+        processor?.setPendingAfterAttachEffects(effects: effects, rotation: rotation, mirror: mirror)
     }
 
     func usePendingAfterAttachEffects() {
@@ -732,6 +733,10 @@ final class Media: NSObject, @unchecked Sendable {
 
     func takeSnapshot(age: Float, onComplete: @escaping @MainActor (UIImage, CIImage, CIImage) -> Void) {
         processor?.takeSnapshot(age: age, onComplete: onComplete)
+    }
+
+    func takePhoto() {
+        processor?.takePhoto()
     }
 
     func takeVideoSourceSnapshot(videoSourceId: UUID,
@@ -923,7 +928,8 @@ final class Media: NSObject, @unchecked Sendable {
         fillFrame: Bool,
         isLandscapeStreamAndPortraitUi: Bool,
         forceSceneTransition: Bool,
-        macScreenCapture: Bool
+        macScreenCapture: Bool,
+        photoShoot: Bool
     ) {
         let params = VideoUnitAttachParams(devices: devices,
                                            builtinDelay: builtinDelay,
@@ -936,7 +942,8 @@ final class Media: NSObject, @unchecked Sendable {
                                            fillFrame: fillFrame,
                                            isLandscapeStreamAndPortraitUi: isLandscapeStreamAndPortraitUi,
                                            forceSceneTransition: forceSceneTransition,
-                                           macScreenCapture: macScreenCapture)
+                                           macScreenCapture: macScreenCapture,
+                                           photoShoot: photoShoot)
         processor?.attachCamera(params: params)
     }
 
@@ -1193,14 +1200,20 @@ extension Media: SrtlaDelegate {
         }
     }
 
+    func srtlaReceivedPacket(packet: Data) {
+        srtStreamNew?.inputPacket(packet: packet)
+    }
+
     func moblinkStreamerDestinationAddress(address: String, port: UInt16) {
         DispatchQueue.main.async {
-            self.delegate.mediaStrlaRelayDestinationAddress(address: address, port: port)
+            self.delegate.mediaMoblinkStreamerDestinationAddress(address: address, port: port)
         }
     }
 
-    func srtlaReceivedPacket(packet: Data) {
-        srtStreamNew?.inputPacket(packet: packet)
+    func moblinkStreamerRestartTunnel(relayId: UUID) {
+        DispatchQueue.main.async {
+            self.delegate.mediaMoblinkStreamerRestartTunnel(relayId: relayId)
+        }
     }
 }
 
@@ -1222,7 +1235,7 @@ extension Media: RistStreamDelegate {
 
     func ristStreamRelayDestinationAddress(address: String, port: UInt16) {
         DispatchQueue.main.async {
-            self.delegate.mediaStrlaRelayDestinationAddress(address: address, port: port)
+            self.delegate.mediaMoblinkStreamerDestinationAddress(address: address, port: port)
         }
     }
 }

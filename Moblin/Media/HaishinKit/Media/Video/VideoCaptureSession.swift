@@ -17,6 +17,7 @@ protocol VideoCaptureSessionDelegate: AnyObject {
                                       _ cameraId: UUID?,
                                       _ sampleBuffer: CMSampleBuffer)
     func videoCaptureSessionWasInterrupted()
+    func videoCaptureSessionInterruptionEnded()
 }
 
 private struct CaptureSessionDevice {
@@ -199,6 +200,28 @@ final class VideoCaptureSession: NSObject, @unchecked Sendable {
         }
     }
 
+    func disableEnhancedVideoStabilization() -> Bool {
+        var didDisable = false
+        for device in captureSessionDevices {
+            for connection in device.output.connections where connection.isVideoStabilizationSupported {
+                connection.preferredVideoStabilizationMode = .off
+                didDisable = true
+            }
+        }
+        return didDisable
+    }
+
+    func restoreEnhancedVideoStabilization() {
+        guard #available(iOS 18.0, macCatalyst 18.0, *) else {
+            return
+        }
+        for device in captureSessionDevices {
+            for connection in device.output.connections where connection.isVideoStabilizationSupported {
+                connection.preferredVideoStabilizationMode = .cinematicExtendedEnhanced
+            }
+        }
+    }
+
     private func configureCaptureSession(params: VideoUnitAttachParams) throws {
         session.beginConfiguration()
         defer {
@@ -317,6 +340,7 @@ final class VideoCaptureSession: NSObject, @unchecked Sendable {
     @objc
     private func sessionInterruptionEnded(_: Notification) {
         logger.debug("video-unit: Session interruption ended")
+        delegate?.videoCaptureSessionInterruptionEnded()
     }
 
     private func findVideoFormat(

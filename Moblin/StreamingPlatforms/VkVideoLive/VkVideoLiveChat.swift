@@ -615,7 +615,7 @@ final class VkVideoLiveChat: NSObject {
             }
             if let smile = part.smile {
                 if let url = URL(string: smile.medium_url ?? smile.small_url ?? "") {
-                    segments.append(ChatPostSegment(id: id, url: url))
+                    segments.append(ChatPostSegment(id: id, url: ChatPostUrl(moving: url, still: url)))
                     id += 1
                 } else if let name = smile.name {
                     segments += makeChatPostTextSegments(text: name, id: &id)

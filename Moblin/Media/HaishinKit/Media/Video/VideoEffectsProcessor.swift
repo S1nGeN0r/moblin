@@ -18,6 +18,7 @@ final class VideoEffectsProcessor {
     private var pendingAfterAttachMirror: Bool?
     private var isMetalPetalGraphicsForcedByEffects: Bool = false
     private var isMetalPetalGraphics: Bool = false
+    private let isApplicationActive = Atomic(true)
     private var blackImage: CIImage?
     private var blackImageMetalPetal: MTIImage?
     private var pool: CVPixelBufferPool?
@@ -47,6 +48,10 @@ final class VideoEffectsProcessor {
         case .metalPetal:
             isMetalPetalGraphics = true
         }
+    }
+
+    func setApplicationActive(_ active: Bool) {
+        isApplicationActive.mutate { $0 = active }
     }
 
     func prepareForAttach() {
@@ -237,7 +242,7 @@ final class VideoEffectsProcessor {
             videoUnit: videoUnit,
             isFirstAfterAttach: completion.isFirstAfterAttach
         )
-        if isMetalPetalGraphicsEnabled() {
+        if isMetalPetalGraphicsEnabled(), isApplicationActive.value || !completion.isSceneSwitchTransition {
             return applyEffectsMetalPetal(
                 imageBuffer,
                 sampleBuffer,
@@ -275,7 +280,7 @@ final class VideoEffectsProcessor {
                                         _ imageBuffer: CVImageBuffer,
                                         _ outputImageBuffer: CVPixelBuffer) -> CMSampleBuffer
     {
-        if isMetalPetalGraphicsEnabled() {
+        if isMetalPetalGraphicsEnabled(), isApplicationActive.value {
             let image = MTIImage(cvPixelBuffer: imageBuffer, alphaType: .alphaIsOne)
             do {
                 try metalPetalContext?.render(applySceneSwitchTransitionMetalPetal(image),

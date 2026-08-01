@@ -528,6 +528,7 @@ private struct VkVideoLiveView: View {
         }
     }
 }
+
 struct QuickButtonChatModerationView: View {
     @ObservedObject var model: Model
     @Binding var presentingModeration: Bool

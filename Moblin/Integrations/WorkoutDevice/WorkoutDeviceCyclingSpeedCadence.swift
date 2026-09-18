@@ -7,6 +7,15 @@ nonisolated(unsafe) let workoutDeviceCyclingSpeedCadenceMeasurementCharacteristi
 private let measurementWheelRevolutionDataFlagIndex = 0
 private let measurementCrankRevolutionDataFlagIndex = 1
 
+struct WorkoutDeviceCyclingSpeedSample {
+    let speed: Double
+    let time: ContinuousClock.Instant
+
+    func value(now: ContinuousClock.Instant = .now) -> Double {
+        time.duration(to: now) < .seconds(3) ? speed : 0
+    }
+}
+
 private struct CyclingSpeedCadenceMeasurement {
     var cumulativeWheelRevolutions: UInt32?
     var lastWheelEventTime: UInt16?
@@ -36,6 +45,7 @@ class WorkoutDeviceCyclingSpeedCadence {
     private var latestAverageSpeedUpdateTime = ContinuousClock.now
     private var reportsWheelRevolutions = false
     private var wheelCircumferenceMeters: Double
+    private(set) var distanceMeters = 0.0
 
     init(wheelCircumference: Int) {
         wheelCircumferenceMeters = Double(wheelCircumference) / 1000
@@ -45,6 +55,7 @@ class WorkoutDeviceCyclingSpeedCadence {
         measurementCharacteristic = nil
         resetMeasurements()
         reportsWheelRevolutions = false
+        distanceMeters = 0
     }
 
     func resetMeasurements() {
@@ -88,15 +99,21 @@ class WorkoutDeviceCyclingSpeedCadence {
                 if deltaRevolutions < 0 {
                     deltaRevolutions += 4_294_967_296
                 }
-                deltaRevolutions = min(deltaRevolutions, 1000)
                 var deltaTime = Int(time) - Int(previousWheelRevolutionsTime)
                 if deltaTime < 0 {
                     deltaTime += 65536
                 }
                 let deltaTimeSeconds = Double(deltaTime) / 1024
                 if deltaTimeSeconds > 0 {
-                    speed = Double(deltaRevolutions) * wheelCircumferenceMeters / deltaTimeSeconds
-                    speed = min(speed, 100)
+                    let distance = Double(deltaRevolutions) * wheelCircumferenceMeters
+                    let measuredSpeed = distance / deltaTimeSeconds
+                    if deltaRevolutions <= 1000, measuredSpeed <= 100 {
+                        speed = measuredSpeed
+                        distanceMeters += distance
+                    } else {
+                        averageSpeed.reset()
+                        speed = 0
+                    }
                 }
             }
             previousWheelRevolutions = revolutions
@@ -106,7 +123,7 @@ class WorkoutDeviceCyclingSpeedCadence {
             averageSpeed.update(value: speed)
             latestAverageSpeedUpdateTime = now
         } else if latestAverageSpeedUpdateTime.duration(to: now) > .seconds(3) {
-            averageSpeed.update(value: 0)
+            averageSpeed.reset()
         }
     }
 }

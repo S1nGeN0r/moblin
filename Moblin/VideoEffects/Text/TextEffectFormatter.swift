@@ -227,6 +227,8 @@ class TextEffectFormatter {
                 formatCyclingCadence(variables: variables)
             case let .cyclingSpeed(unit):
                 formatCyclingSpeed(variables: variables, unit: unit)
+            case let .cyclingDistance(unit):
+                formatDistance(distance: variables.cyclingDistance, unit: unit)
             case let .runningPace(deviceName):
                 formatRunningPace(variables: variables, deviceName: deviceName)
             case let .runningCadence(deviceName):

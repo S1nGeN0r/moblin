@@ -48,6 +48,7 @@ extension Model {
             cyclingPower: "\(cyclingPower) W",
             cyclingCadence: "\(cyclingCadence)",
             cyclingSpeed: cyclingSpeed,
+            cyclingDistance: cyclingDistance,
             runningMetrics: runningMetrics,
             browserTitle: getBrowserTitle(),
             gForce: gForceManager?.getLatest(),

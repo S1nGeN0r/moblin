@@ -99,6 +99,9 @@ extension Model {
 extension Model: WorkoutDeviceDelegate {
     nonisolated func workoutDeviceState(_ device: WorkoutDevice, state: WorkoutDeviceState) {
         DispatchQueue.main.async {
+            if device === self.cyclingSpeedDevice, state != .connected {
+                self.cyclingSpeedSample = nil
+            }
             guard let device = self.getWorkoutDeviceSettings(device: device) else {
                 return
             }
@@ -132,13 +135,23 @@ extension Model: WorkoutDeviceDelegate {
         }
     }
 
-    nonisolated func workoutDeviceCyclingSpeedCadence(_: WorkoutDevice, speed: Double?, cadence: Int?) {
+    nonisolated func workoutDeviceCyclingSpeedCadence(
+        _ device: WorkoutDevice,
+        speed: Double?,
+        cadence: Int?,
+        distance: Double?
+    ) {
         DispatchQueue.main.async {
+            guard self.getWorkoutDeviceSettings(device: device)?.enabled == true else {
+                return
+            }
             if let cadence, self.setCyclingCadence(cadence, source: .cyclingSpeedCadence) {
                 self.addWorkoutCyclingCadence(cadence)
             }
             if let speed {
-                self.cyclingSpeed = speed
+                self.cyclingSpeedSample = WorkoutDeviceCyclingSpeedSample(speed: speed, time: .now)
+                self.cyclingSpeedDevice = device
+                self.cyclingDistance = distance ?? self.cyclingDistance
             }
         }
     }

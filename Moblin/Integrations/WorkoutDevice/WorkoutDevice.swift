@@ -14,7 +14,12 @@ protocol WorkoutDeviceDelegate: AnyObject {
     func workoutDeviceState(_ device: WorkoutDevice, state: WorkoutDeviceState)
     func workoutDeviceHeartRate(_ device: WorkoutDevice, heartRate: Int)
     func workoutDeviceCyclingPower(_ device: WorkoutDevice, power: Int, cadence: Int?)
-    func workoutDeviceCyclingSpeedCadence(_ device: WorkoutDevice, speed: Double?, cadence: Int?)
+    func workoutDeviceCyclingSpeedCadence(
+        _ device: WorkoutDevice,
+        speed: Double?,
+        cadence: Int?,
+        distance: Double?
+    )
     func workoutDeviceRunningMetrics(_ device: WorkoutDevice, metrics: WorkoutDeviceRunningMetrics)
 }
 
@@ -170,7 +175,9 @@ extension WorkoutDevice: CBCentralManagerDelegate {
 
     private func handleCyclingSpeedCadenceMeasurement(value: Data) throws {
         let (speed, cadence) = try cyclingSpeedCadence.handleMeasurement(value: value)
-        delegate?.workoutDeviceCyclingSpeedCadence(self, speed: speed, cadence: cadence)
+        delegate?.workoutDeviceCyclingSpeedCadence(self, speed: speed, cadence: cadence,
+                                                   distance: speed != nil ? cyclingSpeedCadence
+                                                       .distanceMeters : nil)
     }
 
     private func handleCyclingPowerVector(value: Data) throws {

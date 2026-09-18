@@ -108,6 +108,9 @@ struct WorkoutDeviceSettingsView: View {
                     )
                 } footer: {
                     Text("Used to calculate speed from wheel revolutions.")
+                    Text(
+                        "Cycling distance starts at zero when the device is enabled and is kept across reconnects."
+                    )
                 }
                 if device.enabled {
                     Section {

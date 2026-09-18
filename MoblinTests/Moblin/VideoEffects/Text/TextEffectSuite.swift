@@ -5,6 +5,15 @@ import WeatherKit
 
 @MainActor
 struct TextEffectSuite {
+    @Test
+    func cyclingDistanceUnits() {
+        let loader = TextFormatLoader()
+        #expect(loader.load(format: "{cyclingDistance}") == [.cyclingDistance(.system)])
+        #expect(loader.load(format: "{cyclingDistance:km}") == [.cyclingDistance(.kilometers)])
+        #expect(loader.load(format: "{cyclingDistance:mi}") == [.cyclingDistance(.miles)])
+        #expect(loader.load(format: "{cyclingDistance:foo}") == [.text("{cyclingDistance:foo}")])
+    }
+
     @Test(.enabled(if: Locale.current.identifier == "en_SE"))
     func time() {
         let lines = format(format: "{time}", variables: createVariables())

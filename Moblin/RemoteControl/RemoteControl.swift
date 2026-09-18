@@ -656,6 +656,7 @@ struct RemoteControlRemoteSceneDataVariables: Codable {
     let cyclingPower: String
     let cyclingCadence: String
     let cyclingSpeed: Double
+    var cyclingDistance: Double?
     let runningMetrics: [String: WorkoutDeviceRunningMetrics]
     let browserTitle: String
     let gForce: GForce?
@@ -705,6 +706,7 @@ struct RemoteControlRemoteSceneDataVariables: Codable {
         cyclingPower = variables.cyclingPower
         cyclingCadence = variables.cyclingCadence
         cyclingSpeed = variables.cyclingSpeed
+        cyclingDistance = variables.cyclingDistance
         runningMetrics = variables.runningMetrics
         browserTitle = variables.browserTitle
         gForce = variables.gForce
@@ -756,6 +758,7 @@ struct RemoteControlRemoteSceneDataVariables: Codable {
                   cyclingPower: cyclingPower,
                   cyclingCadence: cyclingCadence,
                   cyclingSpeed: cyclingSpeed,
+                  cyclingDistance: cyclingDistance ?? 0,
                   runningMetrics: runningMetrics,
                   browserTitle: browserTitle,
                   gForce: gForce,

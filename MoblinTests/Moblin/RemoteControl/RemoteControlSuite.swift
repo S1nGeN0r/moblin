@@ -4,6 +4,20 @@ import Testing
 import WeatherKit
 
 struct RemoteControlSuite {
+    @Test
+    func cyclingDistanceSupportsOldRemoteScenes() throws {
+        var variables = createVariables()
+        variables.cyclingDistance = 1234.5
+        let data = try JSONEncoder().encode(RemoteControlRemoteSceneDataVariables(variables: variables))
+        let decoded = try JSONDecoder().decode(RemoteControlRemoteSceneDataVariables.self, from: data)
+        #expect(decoded.cyclingDistance == 1234.5)
+        var oldMessage = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        oldMessage.removeValue(forKey: "cyclingDistance")
+        let oldData = try JSONSerialization.data(withJSONObject: oldMessage)
+        let old = try JSONDecoder().decode(RemoteControlRemoteSceneDataVariables.self, from: oldData)
+        #expect(old.cyclingDistance == nil)
+    }
+
     private func encode(_ request: RemoteControlRequest) throws -> String? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
@@ -47,6 +61,7 @@ struct RemoteControlSuite {
           "country" : "Sweden",
           "countryFlag" : "🇸🇪",
           "cyclingCadence" : "90",
+          "cyclingDistance" : 0,
           "cyclingPower" : "250 W",
           "cyclingSpeed" : 10,
           "date" : 745043166,

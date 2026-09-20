@@ -24,6 +24,20 @@ struct RemoteControlSuite {
     }
 
     @Test
+    func cyclingMetricsSupportOlderRemoteScenes() throws {
+        let data = try JSONEncoder()
+            .encode(RemoteControlRemoteSceneDataVariables(variables: createVariables()))
+        var message = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        message.removeValue(forKey: "cyclingDistance")
+        message.removeValue(forKey: "cyclingMetrics")
+        let oldData = try JSONSerialization.data(withJSONObject: message)
+        let decoded = try JSONDecoder().decode(RemoteControlRemoteSceneDataVariables.self, from: oldData)
+        let variables = decoded.toVariables()
+        #expect(variables.cyclingDistance == 0)
+        #expect(variables.cyclingMetrics.isEmpty)
+    }
+
+    @Test
     func remoteSceneDataVariables() throws {
         let variables = RemoteControlRemoteSceneDataVariables(variables: createVariables())
         let encoder = JSONEncoder()
@@ -47,6 +61,17 @@ struct RemoteControlSuite {
           "country" : "Sweden",
           "countryFlag" : "🇸🇪",
           "cyclingCadence" : "90",
+          "cyclingDistance" : 12000,
+          "cyclingMetrics" : {
+            "c1" : {
+              "distance" : 5000,
+              "speed" : 10
+            },
+            "t1" : {
+              "distance" : 1000,
+              "speed" : 3
+            }
+          },
           "cyclingPower" : "250 W",
           "cyclingSpeed" : 10,
           "date" : 745043166,
@@ -306,6 +331,11 @@ struct RemoteControlSuite {
                   cyclingPower: "250 W",
                   cyclingCadence: "90",
                   cyclingSpeed: 10,
+                  cyclingDistance: 12000,
+                  cyclingMetrics: [
+                      "t1": .init(speed: 3, distance: 1000),
+                      "c1": .init(speed: 10, distance: 5000),
+                  ],
                   runningMetrics: ["Foot pod": .init(speed: 3.5, cadence: 180, distance: 4200)],
                   browserTitle: "Title",
                   gForce: GForce(now: 1.5, recentMax: 2.5, max: 3.5),

@@ -701,7 +701,15 @@ final class Model: NSObject, ObservableObject {
     var cyclingCadence = 0
     var latestCyclingPower: CyclingSampleInfo?
     var latestCyclingCadence: CyclingSampleInfo?
-    var cyclingSpeed = 0.0
+    var cyclingSpeed: Double {
+        cyclingSpeedSample?.value() ?? 0
+    }
+
+    var cyclingDistance = 0.0
+    var cyclingSpeedDevice: WorkoutDevice?
+    var cyclingSpeedSample: WorkoutDeviceCyclingSpeedSample?
+    var cyclingMetrics: [String: WorkoutDeviceCyclingMetrics] = [:]
+    var cyclingSpeedSamples: [String: WorkoutDeviceCyclingSpeedSample] = [:]
     var latestSubscriber = ""
     var latestFollower = ""
     private let periodicTimer20ms = MainTimer()

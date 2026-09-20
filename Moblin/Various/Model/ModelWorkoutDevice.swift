@@ -97,14 +97,28 @@ extension Model {
 }
 
 extension Model: WorkoutDeviceDelegate {
-    nonisolated func workoutDeviceState(_ device: WorkoutDevice, state: WorkoutDeviceState) {
+    nonisolated func workoutDeviceState(_ workoutDevice: WorkoutDevice, state: WorkoutDeviceState) {
         DispatchQueue.main.async {
-            guard let device = self.getWorkoutDeviceSettings(device: device) else {
+            guard let device = self.getWorkoutDeviceSettings(device: workoutDevice) else {
                 return
             }
             let deviceName = device.name.lowercased()
             self.heartRates.removeValue(forKey: deviceName)
             self.runningMetrics.removeValue(forKey: deviceName)
+            if state != .connected {
+                self.cyclingSpeedSamples.removeValue(forKey: deviceName)
+                self.cyclingMetrics[deviceName]?.speed = nil
+                if self.cyclingSpeedDevice === workoutDevice {
+                    self.cyclingSpeedSample = nil
+                }
+            }
+            if state == .disconnected {
+                self.cyclingMetrics.removeValue(forKey: deviceName)
+                if self.cyclingSpeedDevice === workoutDevice {
+                    self.cyclingSpeedDevice = nil
+                    self.cyclingDistance = 0
+                }
+            }
             if device === self.currentWorkoutDeviceSettings {
                 self.statusTopRight.workoutDeviceState = state
             }
@@ -132,14 +146,33 @@ extension Model: WorkoutDeviceDelegate {
         }
     }
 
-    nonisolated func workoutDeviceCyclingSpeedCadence(_: WorkoutDevice, speed: Double?, cadence: Int?) {
+    nonisolated func workoutDeviceCyclingSpeedCadence(
+        _ device: WorkoutDevice,
+        speed: Double?,
+        cadence: Int?,
+        distance: Double?
+    ) {
         DispatchQueue.main.async {
+            guard let settings = self.getWorkoutDeviceSettings(device: device), settings.enabled else {
+                return
+            }
+            let deviceName = settings.name.lowercased()
+            var metrics = self.cyclingMetrics[deviceName] ?? .init()
             if let cadence, self.setCyclingCadence(cadence, source: .cyclingSpeedCadence) {
                 self.addWorkoutCyclingCadence(cadence)
             }
             if let speed {
-                self.cyclingSpeed = speed
+                let sample = WorkoutDeviceCyclingSpeedSample(speed: speed, time: .now)
+                self.cyclingSpeedSample = sample
+                self.cyclingSpeedDevice = device
+                self.cyclingSpeedSamples[deviceName] = sample
+                metrics.speed = speed
             }
+            if let distance {
+                self.cyclingDistance = distance
+                metrics.distance = distance
+            }
+            self.cyclingMetrics[deviceName] = metrics
         }
     }
 

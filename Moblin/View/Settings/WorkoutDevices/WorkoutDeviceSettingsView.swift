@@ -107,7 +107,10 @@ struct WorkoutDeviceSettingsView: View {
                         valueFormat: { "\($0) mm" }
                     )
                 } footer: {
-                    Text("Used to calculate speed from wheel revolutions.")
+                    Text("""
+                    Used to calculate cycling speed and distance from wheel revolutions. \
+                    Add {cyclingSpeed} or {cyclingDistance} to a text widget to show them on stream.
+                    """)
                 }
                 if device.enabled {
                     Section {

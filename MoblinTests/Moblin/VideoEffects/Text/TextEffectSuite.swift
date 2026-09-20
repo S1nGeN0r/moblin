@@ -293,6 +293,49 @@ struct TextEffectSuite {
     }
 
     @Test
+    func loadFormatCyclingSpeed() {
+        let loader = TextFormatLoader()
+        var parts = loader.load(format: "{cyclingspeed}")
+        #expect(parts == [.cyclingSpeed(.system)])
+        parts = loader.load(format: "{cyclingspeed:km/h}")
+        #expect(parts == [.cyclingSpeed(.kilometersPerHour)])
+        parts = loader.load(format: "{cyclingspeed:mph}")
+        #expect(parts == [.cyclingSpeed(.milesPerHour)])
+        parts = loader.load(format: "{cyclingspeed:T1}")
+        #expect(parts == [.cyclingSpeedDevice("t1")])
+    }
+
+    @Test
+    func loadFormatCyclingDistance() {
+        let loader = TextFormatLoader()
+        var parts = loader.load(format: "{cyclingdistance}")
+        #expect(parts == [.cyclingDistance(.system)])
+        parts = loader.load(format: "{cyclingdistance:km}")
+        #expect(parts == [.cyclingDistance(.kilometers)])
+        parts = loader.load(format: "{cyclingdistance:mi}")
+        #expect(parts == [.cyclingDistance(.miles)])
+        parts = loader.load(format: "{cyclingdistance:C1}")
+        #expect(parts == [.cyclingDistanceDevice("c1")])
+    }
+
+    @Test
+    func formatsIndependentCyclingDevices() {
+        let variables = createVariables(cyclingMetrics: [
+            "t1": .init(speed: 3, distance: 1000),
+            "c1": .init(speed: 10, distance: 5000),
+        ])
+        let t1Speed = format(format: "{cyclingSpeed:t1}", variables: variables).toPlainText()
+        let c1Speed = format(format: "{cyclingSpeed:C1}", variables: variables).toPlainText()
+        let t1Distance = format(format: "{cyclingDistance:t1}", variables: variables).toPlainText()
+        let c1Distance = format(format: "{cyclingDistance:C1}", variables: variables).toPlainText()
+        #expect(t1Speed != "-")
+        #expect(t1Speed != c1Speed)
+        #expect(t1Distance != "-")
+        #expect(t1Distance != c1Distance)
+        #expect(format(format: "{cyclingSpeed:missing}", variables: variables).toPlainText() == "-")
+    }
+
+    @Test
     func loadFormatSubtitles() {
         let loader = TextFormatLoader()
         var parts = loader.load(format: "{subtitles}")
@@ -334,6 +377,7 @@ struct TextEffectSuite {
     private func createVariables(conditions: String? = nil,
                                  condition: WeatherCondition? = nil,
                                  heartRates: [String: Int?] = [:],
+                                 cyclingMetrics: [String: WorkoutDeviceCyclingMetrics] = [:],
                                  gForce: GForce? = nil,
                                  systemMonitor: String = "") -> Variables
     {
@@ -379,6 +423,8 @@ struct TextEffectSuite {
                   cyclingPower: "",
                   cyclingCadence: "",
                   cyclingSpeed: 0,
+                  cyclingDistance: 0,
+                  cyclingMetrics: cyclingMetrics,
                   runningMetrics: [:],
                   browserTitle: "",
                   gForce: gForce,

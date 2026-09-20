@@ -31,20 +31,79 @@ private func wheelAndCrankMeasurement(wheelRevolutions: UInt32,
 
 struct WorkoutDeviceCyclingSpeedCadenceSuite {
     @Test
+    func speedExpiresWithoutAnotherPacket() {
+        let now = ContinuousClock.now
+        let sample = WorkoutDeviceCyclingSpeedSample(speed: 10, time: now)
+        #expect(sample.value(now: now.advanced(by: .seconds(2))) == 10)
+        #expect(sample.value(now: now.advanced(by: .seconds(3))) == 0)
+        #expect(sample.value(now: now.advanced(by: .seconds(60))) == 0)
+    }
+
+    @Test
+    func distanceStartsAtZeroAndSurvivesReconnect() throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        let (_, _, initialDistance) = try device.handleMeasurement(value: wheelMeasurement(
+            revolutions: 50000,
+            eventTime: 1024
+        ))
+        #expect(initialDistance == 0)
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 50005, eventTime: 2048))
+        #expect(device.distanceMeters == 10)
+        device.resetMeasurements()
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 2, eventTime: 1024))
+        #expect(device.distanceMeters == 10)
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 3, eventTime: 2048))
+        #expect(device.distanceMeters == 12)
+        device.reset()
+        #expect(device.distanceMeters == 0)
+    }
+
+    @Test
+    func rejectsCounterResetAndResumesFromNewBaseline() throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1000, eventTime: 1024))
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1001, eventTime: 2048))
+        let (speed, _, _) = try device.handleMeasurement(value: wheelMeasurement(
+            revolutions: 0,
+            eventTime: 3072
+        ))
+        #expect(speed == 0)
+        #expect(device.distanceMeters == 2)
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1, eventTime: 4096))
+        #expect(device.distanceMeters == 4)
+    }
+
+    @Test
+    func distanceHandlesRolloverAndWheelSizeChanges() throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: .max, eventTime: 65000))
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 0, eventTime: 488))
+        #expect(device.distanceMeters == 2)
+        device.setWheelCircumference(millimeters: 2500)
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1, eventTime: 1512))
+        #expect(device.distanceMeters == 4.5)
+    }
+
+    @Test
     func firstMeasurementOnlySeedsState() throws {
         let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2105)
-        let (speed, cadence) = try device.handleMeasurement(value: crankMeasurement(revolutions: 10,
-                                                                                    eventTime: 1024))
+        let (speed, cadence, distance) = try device.handleMeasurement(value: crankMeasurement(
+            revolutions: 10,
+            eventTime: 1024
+        ))
         #expect(cadence == nil)
         #expect(speed == nil)
+        #expect(distance == nil)
     }
 
     @Test
     func calculatesCadenceFromCrankRevolutions() throws {
         let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2105)
         _ = try device.handleMeasurement(value: crankMeasurement(revolutions: 10, eventTime: 1024))
-        let (_, cadence) = try device.handleMeasurement(value: crankMeasurement(revolutions: 13,
-                                                                                eventTime: 1024 + 2048))
+        let (_, cadence, _) = try device.handleMeasurement(value: crankMeasurement(
+            revolutions: 13,
+            eventTime: 1024 + 2048
+        ))
         #expect(cadence == 90)
     }
 
@@ -52,8 +111,10 @@ struct WorkoutDeviceCyclingSpeedCadenceSuite {
     func handlesCrankRevolutionsWrapAround() throws {
         let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2105)
         _ = try device.handleMeasurement(value: crankMeasurement(revolutions: 65535, eventTime: 65000))
-        let (_, cadence) = try device.handleMeasurement(value: crankMeasurement(revolutions: 0,
-                                                                                eventTime: 65000 &+ 1024))
+        let (_, cadence, _) = try device.handleMeasurement(value: crankMeasurement(
+            revolutions: 0,
+            eventTime: 65000 &+ 1024
+        ))
         #expect(cadence == 60)
     }
 
@@ -62,8 +123,10 @@ struct WorkoutDeviceCyclingSpeedCadenceSuite {
         let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2105)
         _ = try device.handleMeasurement(value: crankMeasurement(revolutions: 10, eventTime: 1024))
         _ = try device.handleMeasurement(value: crankMeasurement(revolutions: 11, eventTime: 1024 + 1024))
-        let (_, cadence) = try device.handleMeasurement(value: crankMeasurement(revolutions: 11,
-                                                                                eventTime: 1024 + 1024))
+        let (_, cadence, _) = try device.handleMeasurement(value: crankMeasurement(
+            revolutions: 11,
+            eventTime: 1024 + 1024
+        ))
         #expect(cadence == 60)
     }
 
@@ -71,8 +134,10 @@ struct WorkoutDeviceCyclingSpeedCadenceSuite {
     func cadenceOnlySensorReportsNoSpeed() throws {
         let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2105)
         _ = try device.handleMeasurement(value: crankMeasurement(revolutions: 10, eventTime: 1024))
-        let (speed, cadence) = try device.handleMeasurement(value: crankMeasurement(revolutions: 11,
-                                                                                    eventTime: 1024 + 1024))
+        let (speed, cadence, _) = try device.handleMeasurement(value: crankMeasurement(
+            revolutions: 11,
+            eventTime: 1024 + 1024
+        ))
         #expect(cadence == 60)
         #expect(speed == nil)
     }
@@ -82,10 +147,13 @@ struct WorkoutDeviceCyclingSpeedCadenceSuite {
         let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2105)
         device.setWheelCircumference(millimeters: 2000)
         _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 100, eventTime: 1024))
-        let (speed, cadence) = try device.handleMeasurement(value: wheelMeasurement(revolutions: 105,
-                                                                                    eventTime: 1024 + 1024))
+        let (speed, cadence, distance) = try device.handleMeasurement(value: wheelMeasurement(
+            revolutions: 105,
+            eventTime: 1024 + 1024
+        ))
         #expect(cadence == nil)
         #expect(try isEqual(#require(speed), 10, epsilon: 0.001))
+        #expect(try isEqual(#require(distance), 10, epsilon: 0.001))
     }
 
     @Test
@@ -96,7 +164,7 @@ struct WorkoutDeviceCyclingSpeedCadenceSuite {
                                                                          wheelEventTime: 1024,
                                                                          crankRevolutions: 10,
                                                                          crankEventTime: 1024))
-        let (speed, cadence) = try device.handleMeasurement(value: wheelAndCrankMeasurement(
+        let (speed, cadence, distance) = try device.handleMeasurement(value: wheelAndCrankMeasurement(
             wheelRevolutions: 105,
             wheelEventTime: 1024 + 1024,
             crankRevolutions: 11,
@@ -104,6 +172,7 @@ struct WorkoutDeviceCyclingSpeedCadenceSuite {
         ))
         #expect(cadence == 60)
         #expect(try isEqual(#require(speed), 10, epsilon: 0.001))
+        #expect(try isEqual(#require(distance), 10, epsilon: 0.001))
     }
 
     @Test
@@ -111,8 +180,10 @@ struct WorkoutDeviceCyclingSpeedCadenceSuite {
         let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2105)
         device.setWheelCircumference(millimeters: 2000)
         _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: .max, eventTime: 1024))
-        let (speed, _) = try device.handleMeasurement(value: wheelMeasurement(revolutions: 4,
-                                                                              eventTime: 1024 + 1024))
+        let (speed, _, _) = try device.handleMeasurement(value: wheelMeasurement(
+            revolutions: 4,
+            eventTime: 1024 + 1024
+        ))
         #expect(try isEqual(#require(speed), 10, epsilon: 0.001))
     }
 

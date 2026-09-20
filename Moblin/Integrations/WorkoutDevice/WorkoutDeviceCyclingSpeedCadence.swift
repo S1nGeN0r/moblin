@@ -6,6 +6,22 @@ nonisolated(unsafe) let workoutDeviceCyclingSpeedCadenceMeasurementCharacteristi
 
 private let measurementWheelRevolutionDataFlagIndex = 0
 private let measurementCrankRevolutionDataFlagIndex = 1
+private let maximumWheelRevolutionsPerMeasurement = 1000
+private let maximumCyclingSpeedMetersPerSecond = 100.0
+
+struct WorkoutDeviceCyclingSpeedSample {
+    let speed: Double
+    let time: ContinuousClock.Instant
+
+    func value(now: ContinuousClock.Instant = .now) -> Double {
+        time.duration(to: now) < .seconds(3) ? speed : 0
+    }
+}
+
+struct WorkoutDeviceCyclingMetrics: Codable, Equatable {
+    var speed: Double?
+    var distance: Double?
+}
 
 private struct CyclingSpeedCadenceMeasurement {
     var cumulativeWheelRevolutions: UInt32?
@@ -36,6 +52,7 @@ class WorkoutDeviceCyclingSpeedCadence {
     private var latestAverageSpeedUpdateTime = ContinuousClock.now
     private var reportsWheelRevolutions = false
     private var wheelCircumferenceMeters: Double
+    private(set) var distanceMeters = 0.0
 
     init(wheelCircumference: Int) {
         wheelCircumferenceMeters = Double(wheelCircumference) / 1000
@@ -45,6 +62,7 @@ class WorkoutDeviceCyclingSpeedCadence {
         measurementCharacteristic = nil
         resetMeasurements()
         reportsWheelRevolutions = false
+        distanceMeters = 0
     }
 
     func resetMeasurements() {
@@ -66,7 +84,7 @@ class WorkoutDeviceCyclingSpeedCadence {
         wheelCircumferenceMeters = Double(millimeters) / 1000
     }
 
-    func handleMeasurement(value: Data) throws -> (Double?, Int?) {
+    func handleMeasurement(value: Data) throws -> (speed: Double?, cadence: Int?, distance: Double?) {
         let measurement = try CyclingSpeedCadenceMeasurement(value: value)
         let now = ContinuousClock.now
         let cadence = crankCadence.update(revolutions: measurement.cumulativeCrankRevolutions,
@@ -74,7 +92,8 @@ class WorkoutDeviceCyclingSpeedCadence {
                                           now: now)
         updateSpeed(measurement: measurement, now: now)
         return (reportsWheelRevolutions ? averageSpeed.averageIgnoreZeros() : nil,
-                cadence)
+                cadence,
+                reportsWheelRevolutions ? distanceMeters : nil)
     }
 
     private func updateSpeed(measurement: CyclingSpeedCadenceMeasurement, now: ContinuousClock.Instant) {
@@ -88,15 +107,23 @@ class WorkoutDeviceCyclingSpeedCadence {
                 if deltaRevolutions < 0 {
                     deltaRevolutions += 4_294_967_296
                 }
-                deltaRevolutions = min(deltaRevolutions, 1000)
                 var deltaTime = Int(time) - Int(previousWheelRevolutionsTime)
                 if deltaTime < 0 {
                     deltaTime += 65536
                 }
                 let deltaTimeSeconds = Double(deltaTime) / 1024
                 if deltaTimeSeconds > 0 {
-                    speed = Double(deltaRevolutions) * wheelCircumferenceMeters / deltaTimeSeconds
-                    speed = min(speed, 100)
+                    let distance = Double(deltaRevolutions) * wheelCircumferenceMeters
+                    let measuredSpeed = distance / deltaTimeSeconds
+                    if deltaRevolutions <= maximumWheelRevolutionsPerMeasurement,
+                       measuredSpeed <= maximumCyclingSpeedMetersPerSecond
+                    {
+                        speed = measuredSpeed
+                        distanceMeters += distance
+                    } else {
+                        averageSpeed.reset()
+                        speed = 0
+                    }
                 }
             }
             previousWheelRevolutions = revolutions
@@ -106,7 +133,7 @@ class WorkoutDeviceCyclingSpeedCadence {
             averageSpeed.update(value: speed)
             latestAverageSpeedUpdateTime = now
         } else if latestAverageSpeedUpdateTime.duration(to: now) > .seconds(3) {
-            averageSpeed.update(value: 0)
+            averageSpeed.reset()
         }
     }
 }

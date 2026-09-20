@@ -5,6 +5,11 @@ extension Model {
         let location = locationManager.getLatestKnownLocation()
         let weather = weatherManager.getLatestWeather()?.currentWeather
         let placemark = geographyManager.getLatestPlacemark()
+        let currentCyclingMetrics = Dictionary(uniqueKeysWithValues: cyclingMetrics.map { name, metrics in
+            var metrics = metrics
+            metrics.speed = cyclingSpeedSamples[name]?.value(now: timestamp)
+            return (name, metrics)
+        })
         return Variables(
             timestamp: timestamp,
             bitrate: bitrate.speedMbpsOneDecimal,
@@ -48,6 +53,8 @@ extension Model {
             cyclingPower: "\(cyclingPower) W",
             cyclingCadence: "\(cyclingCadence)",
             cyclingSpeed: cyclingSpeed,
+            cyclingDistance: cyclingDistance,
+            cyclingMetrics: currentCyclingMetrics,
             runningMetrics: runningMetrics,
             browserTitle: getBrowserTitle(),
             gForce: gForceManager?.getLatest(),

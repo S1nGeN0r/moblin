@@ -201,6 +201,7 @@ private enum JsonValue: Decodable {
     }
 }
 
+@MainActor
 protocol VkVideoLiveChatDelegate: AnyObject {
     func vkVideoLiveChatAppendMessage(
         messageId: String?,
@@ -226,6 +227,7 @@ protocol VkVideoLiveChatDelegate: AnyObject {
     )
 }
 
+@MainActor
 final class VkVideoLiveChat: NSObject {
     private let channelUrl: String
     private let api: VkVideoLiveApi
@@ -239,7 +241,7 @@ final class VkVideoLiveChat: NSObject {
     private var streamId: String?
     private var subscribed = false
     private var started = false
-    private let restartTimer = SimpleTimer(queue: .main)
+    private let restartTimer = MainTimer()
 
     init(delegate: any VkVideoLiveChatDelegate, channelUrl: String, accessToken: String) {
         self.delegate = delegate

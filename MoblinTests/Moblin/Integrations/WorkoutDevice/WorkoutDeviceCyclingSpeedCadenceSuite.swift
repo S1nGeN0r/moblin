@@ -31,6 +31,125 @@ private func wheelAndCrankMeasurement(wheelRevolutions: UInt32,
 
 struct WorkoutDeviceCyclingSpeedCadenceSuite {
     @Test
+    func delayedResetConfirmationDoesNotReportOldSpeed() throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        let now = ContinuousClock.now
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1000, eventTime: 30 * 1024),
+                                         now: now)
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 0, eventTime: 0),
+                                         now: now.advanced(by: .seconds(1)))
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1, eventTime: 1024),
+                                         now: now.advanced(by: .seconds(2)))
+        let confirmed = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1, eventTime: 1024),
+                                                     now: now.advanced(by: .seconds(64)))
+        #expect(confirmed.distance == 2)
+        #expect(confirmed.speed == 0)
+    }
+
+    @Test(arguments: [UInt16(10240), 488])
+    func severalOlderPacketsDoNotConfirmReset(lastEventTime: UInt16) throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        let now = ContinuousClock.now
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 100, eventTime: lastEventTime),
+                                         now: now)
+        for index in 1 ... 3 {
+            _ = try device.handleMeasurement(
+                value: wheelMeasurement(revolutions: UInt32(96 + index),
+                                        eventTime: lastEventTime &- UInt16((4 - index) * 1024)),
+                now: now.advanced(by: .milliseconds(100 * index))
+            )
+            #expect(device.distanceMeters == 0)
+        }
+        let next = try device.handleMeasurement(
+            value: wheelMeasurement(revolutions: 101, eventTime: lastEventTime &+ 1024),
+            now: now.advanced(by: .seconds(1))
+        )
+        #expect(next.distance == 2)
+        #expect(next.speed == 2)
+    }
+
+    @Test
+    func counterAndTimerResetWaitsForUnambiguousProgressWithoutLosingPendingDistance() throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        let now = ContinuousClock.now
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1000, eventTime: 30 * 1024),
+                                         now: now)
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 0, eventTime: 0),
+                                         now: now.advanced(by: .seconds(1)))
+        let ambiguous = try device.handleMeasurement(value: wheelMeasurement(revolutions: 1, eventTime: 1024),
+                                                     now: now.advanced(by: .seconds(2)))
+        #expect(ambiguous.distance == 0)
+        let confirmed = try device.handleMeasurement(
+            value: wheelMeasurement(revolutions: 31, eventTime: 31 * 1024),
+            now: now.advanced(by: .seconds(32))
+        )
+        #expect(confirmed.distance == 62)
+        #expect(confirmed.speed == 0)
+        let next = try device.handleMeasurement(
+            value: wheelMeasurement(revolutions: 32, eventTime: 32 * 1024),
+            now: now.advanced(by: .seconds(33))
+        )
+        #expect(next.distance == 64)
+        #expect(next.speed == 2)
+    }
+
+    @Test(arguments: [UInt32(0), 1, 98, 99, 100_000])
+    func rejectedPacketDoesNotMoveDistanceBaseline(rejectedRevolutions: UInt32) throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        let now = ContinuousClock.now
+        _ = try device.handleMeasurement(
+            value: wheelMeasurement(revolutions: 100, eventTime: 10240),
+            now: now
+        )
+        _ = try device.handleMeasurement(
+            value: wheelMeasurement(revolutions: rejectedRevolutions, eventTime: 8192),
+            now: now.advanced(by: .milliseconds(250))
+        )
+        #expect(device.distanceMeters == 0)
+        let next = try device.handleMeasurement(value: wheelMeasurement(revolutions: 101, eventTime: 11264),
+                                                now: now.advanced(by: .seconds(1)))
+        #expect(next.distance == 2)
+        #expect(next.speed == 2)
+    }
+
+    @Test
+    func repeatedRejectedPacketDoesNotConfirmCounterReset() throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        let now = ContinuousClock.now
+        _ = try device.handleMeasurement(
+            value: wheelMeasurement(revolutions: 100, eventTime: 10240),
+            now: now
+        )
+        for index in 1 ... 3 {
+            _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 98, eventTime: 8192),
+                                             now: now.advanced(by: .milliseconds(100 * index)))
+        }
+        let next = try device.handleMeasurement(value: wheelMeasurement(revolutions: 101, eventTime: 11264),
+                                                now: now.advanced(by: .seconds(1)))
+        #expect(next.distance == 2)
+        #expect(next.speed == 2)
+    }
+
+    @Test
+    func reconnectClearsUnconfirmedCounterReset() throws {
+        let device = WorkoutDeviceCyclingSpeedCadence(wheelCircumference: 2000)
+        let now = ContinuousClock.now
+        _ = try device.handleMeasurement(
+            value: wheelMeasurement(revolutions: 100, eventTime: 10240),
+            now: now
+        )
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 98, eventTime: 8192),
+                                         now: now.advanced(by: .milliseconds(100)))
+        device.resetMeasurements()
+        _ = try device.handleMeasurement(value: wheelMeasurement(revolutions: 99, eventTime: 9216),
+                                         now: now.advanced(by: .milliseconds(200)))
+        let next = try device.handleMeasurement(value: wheelMeasurement(revolutions: 101, eventTime: 11264),
+                                                now: now.advanced(by: .seconds(1)))
+        #expect(next.distance == 2)
+        #expect(next.speed == 0)
+    }
+
+    @Test
     func speedExpiresWithoutAnotherPacket() {
         let now = ContinuousClock.now
         let sample = WorkoutDeviceCyclingSpeedSample(speed: 10, time: now)

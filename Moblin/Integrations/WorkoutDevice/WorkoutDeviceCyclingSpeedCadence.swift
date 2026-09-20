@@ -103,11 +103,29 @@ private struct CyclingSpeedCadenceMeasurement {
     }
 }
 
+private struct CyclingWheelSample {
+    let revolutions: UInt32
+    let eventTime: UInt16
+    let receivedAt: ContinuousClock.Instant
+
+    func elapsedSeconds(since previous: Self) -> Double {
+        let elapsed = previous.receivedAt.duration(to: receivedAt).components
+        return Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
+    }
+
+    func eventSeconds(since previous: Self) -> Double {
+        Double(eventTime &- previous.eventTime) / 1024
+    }
+
+    func distance(since previous: Self, wheelCircumference: Double) -> Double {
+        Double(revolutions &- previous.revolutions) * wheelCircumference
+    }
+}
+
 class WorkoutDeviceCyclingSpeedCadence {
     private var measurementCharacteristic: CBCharacteristic?
-    private var previousWheelRevolutions: UInt32?
-    private var previousWheelRevolutionsTime: UInt16?
-    private var previousWheelMeasurementTime: ContinuousClock.Instant?
+    private var previousWheelSample: CyclingWheelSample?
+    private var pendingWheelReset: CyclingWheelSample?
     private var needsSpeedBaseline = true
     private let crankCadence = WorkoutDeviceCrankCadence()
     private let averageSpeed = WorkoutDeviceAverageCalculator()
@@ -126,15 +144,14 @@ class WorkoutDeviceCyclingSpeedCadence {
         reportsWheelRevolutions = false
         if !preserveDistance {
             distanceMeters = 0
-            previousWheelRevolutions = nil
-            previousWheelRevolutionsTime = nil
-            previousWheelMeasurementTime = nil
+            previousWheelSample = nil
         }
     }
 
     func resetMeasurements() {
         // Keep the wheel counter for distance recovery, but never average speed across a disconnect.
         needsSpeedBaseline = true
+        pendingWheelReset = nil
         crankCadence.reset()
         averageSpeed.reset()
     }
@@ -165,50 +182,92 @@ class WorkoutDeviceCyclingSpeedCadence {
     }
 
     private func updateSpeed(measurement: CyclingSpeedCadenceMeasurement, now: ContinuousClock.Instant) {
-        var speed = -1.0
+        var speed: Double?
         if let revolutions = measurement.cumulativeWheelRevolutions,
            let time = measurement.lastWheelEventTime
         {
             reportsWheelRevolutions = true
-            if let previousWheelRevolutions, let previousWheelRevolutionsTime,
-               let previousWheelMeasurementTime
-            {
-                let elapsed = previousWheelMeasurementTime.duration(to: now).components
-                let elapsedSeconds = Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
-                let distance = Double(revolutions &- previousWheelRevolutions) * wheelCircumferenceMeters
-                // The event timer wraps every 64 seconds. Distance must not depend on that timer.
-                // Allow one second of delivery jitter, and reject implausible counter resets/jumps.
-                let validDistance = distance <= maximumCyclingSpeedMetersPerSecond * max(
-                    1,
-                    elapsedSeconds + 1
-                )
-                if validDistance {
-                    distanceMeters += distance
-                }
-                let eventSeconds = Double(time &- previousWheelRevolutionsTime) / 1024
-                if !validDistance || needsSpeedBaseline || elapsedSeconds >= 64 {
-                    averageSpeed.reset()
-                    speed = 0
-                } else if eventSeconds > 0 {
-                    let measuredSpeed = distance / eventSeconds
-                    if measuredSpeed <= maximumCyclingSpeedMetersPerSecond {
-                        speed = measuredSpeed
-                    } else {
-                        averageSpeed.reset()
-                        speed = 0
-                    }
-                }
-            }
-            previousWheelRevolutions = revolutions
-            previousWheelRevolutionsTime = time
-            previousWheelMeasurementTime = now
-            needsSpeedBaseline = false
+            speed = updateWheelSample(CyclingWheelSample(revolutions: revolutions,
+                                                         eventTime: time,
+                                                         receivedAt: now))
         }
-        if speed != -1.0 {
+        if let speed {
             averageSpeed.update(value: speed)
             latestAverageSpeedUpdateTime = now
         } else if latestAverageSpeedUpdateTime.duration(to: now) > .seconds(3) {
             averageSpeed.reset()
         }
+    }
+
+    private func isPlausibleDistance(from previous: CyclingWheelSample,
+                                     to current: CyclingWheelSample) -> Bool
+    {
+        // The event timer wraps every 64 seconds. Validate distance using receipt time, with delivery jitter.
+        current.distance(since: previous, wheelCircumference: wheelCircumferenceMeters)
+            <= maximumCyclingSpeedMetersPerSecond * max(1, current.elapsedSeconds(since: previous) + 1)
+    }
+
+    private func updateWheelSample(_ current: CyclingWheelSample) -> Double? {
+        var baseline = previousWheelSample
+        var resetConfirmed = false
+        if let previousWheelSample, !isPlausibleDistance(from: previousWheelSample, to: current) {
+            // One rejected packet may be stale. Keep the accepted baseline until a new counter
+            // progresses coherently; always prefer continuity from the accepted counter when possible.
+            if let pendingWheelReset,
+               current.revolutions != pendingWheelReset.revolutions,
+               current.eventSeconds(since: pendingWheelReset) > 0,
+               isPlausibleDistance(from: pendingWheelReset, to: current)
+            {
+                // A short replay of older wheel events must not look like a counter reset.
+                // If the event timer itself restarted, keep the candidate until ordering is no
+                // longer ambiguous. A full timer period or a reconnect invalidates this comparison.
+                if !needsSpeedBaseline,
+                   current.elapsedSeconds(since: previousWheelSample) < 64,
+                   current.eventSeconds(since: previousWheelSample) >= 32
+                {
+                    averageSpeed.reset()
+                    return 0
+                }
+                baseline = pendingWheelReset
+                resetConfirmed = true
+            } else {
+                // Duplicates are not confirmation and must not refresh the candidate's receipt time.
+                if pendingWheelReset?.revolutions != current.revolutions
+                    || pendingWheelReset?.eventTime != current.eventTime
+                {
+                    pendingWheelReset = current
+                }
+                averageSpeed.reset()
+                return 0
+            }
+        }
+        defer {
+            previousWheelSample = current
+            pendingWheelReset = nil
+            needsSpeedBaseline = false
+        }
+        guard let baseline else {
+            return nil
+        }
+        let distance = current.distance(since: baseline, wheelCircumference: wheelCircumferenceMeters)
+        distanceMeters += distance
+        let elapsedSeconds = current.elapsedSeconds(since: baseline)
+        // Delayed reset confirmation recovers distance, not a current speed measurement.
+        if (!resetConfirmed && needsSpeedBaseline) || elapsedSeconds >= 64
+            || (resetConfirmed && elapsedSeconds >= 3)
+        {
+            averageSpeed.reset()
+            return 0
+        }
+        let eventSeconds = current.eventSeconds(since: baseline)
+        guard eventSeconds > 0 else {
+            return nil
+        }
+        let speed = distance / eventSeconds
+        guard speed <= maximumCyclingSpeedMetersPerSecond else {
+            averageSpeed.reset()
+            return 0
+        }
+        return speed
     }
 }

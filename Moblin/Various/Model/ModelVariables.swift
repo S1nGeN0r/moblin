@@ -5,11 +5,10 @@ extension Model {
         let location = locationManager.getLatestKnownLocation()
         let weather = weatherManager.getLatestWeather()?.currentWeather
         let placemark = geographyManager.getLatestPlacemark()
-        let currentCyclingMetrics = Dictionary(uniqueKeysWithValues: cyclingMetrics.map { name, metrics in
-            var metrics = metrics
-            metrics.speed = cyclingSpeedSamples[name]?.value(now: timestamp)
-            return (name, metrics)
-        })
+        let currentCyclingMetrics = cyclingMetricsStore.metricsByName(
+            devices: database.workoutDevices.devices.filter(\.enabled).map { (id: $0.id, name: $0.name) },
+            now: timestamp
+        )
         return Variables(
             timestamp: timestamp,
             bitrate: bitrate.speedMbpsOneDecimal,

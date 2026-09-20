@@ -66,7 +66,9 @@ struct WorkoutDeviceSettingsView: View {
         NavigationLink {
             Form {
                 Section {
-                    NameEditView(name: $device.name, existingNames: workoutDevices.devices)
+                    NameEditView(name: $device.name,
+                                 existingNames: workoutDevices.devices.filter { $0.id != device.id },
+                                 caseInsensitive: true)
                 } footer: {
                     Text("Add {heartRate:\(device.name)} to a text widget to show heart rate on stream.")
                 }

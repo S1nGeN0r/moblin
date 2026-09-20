@@ -702,14 +702,14 @@ final class Model: NSObject, ObservableObject {
     var latestCyclingPower: CyclingSampleInfo?
     var latestCyclingCadence: CyclingSampleInfo?
     var cyclingSpeed: Double {
-        cyclingSpeedSample?.value() ?? 0
+        cyclingMetricsStore.speed
     }
 
-    var cyclingDistance = 0.0
-    var cyclingSpeedDevice: WorkoutDevice?
-    var cyclingSpeedSample: WorkoutDeviceCyclingSpeedSample?
-    var cyclingMetrics: [String: WorkoutDeviceCyclingMetrics] = [:]
-    var cyclingSpeedSamples: [String: WorkoutDeviceCyclingSpeedSample] = [:]
+    var cyclingDistance: Double {
+        cyclingMetricsStore.distance
+    }
+
+    var cyclingMetricsStore = WorkoutDeviceCyclingMetricsStore()
     var latestSubscriber = ""
     var latestFollower = ""
     private let periodicTimer20ms = MainTimer()

@@ -6,7 +6,6 @@ nonisolated(unsafe) let workoutDeviceCyclingSpeedCadenceMeasurementCharacteristi
 
 private let measurementWheelRevolutionDataFlagIndex = 0
 private let measurementCrankRevolutionDataFlagIndex = 1
-private let maximumWheelRevolutionsPerMeasurement = 1000
 private let maximumCyclingSpeedMetersPerSecond = 100.0
 
 struct WorkoutDeviceCyclingSpeedSample {
@@ -21,6 +20,69 @@ struct WorkoutDeviceCyclingSpeedSample {
 struct WorkoutDeviceCyclingMetrics: Codable, Equatable {
     var speed: Double?
     var distance: Double?
+}
+
+struct WorkoutDeviceCyclingMetricsStore {
+    private var metrics: [UUID: WorkoutDeviceCyclingMetrics] = [:]
+    private var speedSamples: [UUID: WorkoutDeviceCyclingSpeedSample] = [:]
+    private var selectedDeviceId: UUID?
+
+    var speed: Double {
+        selectedDeviceId.flatMap { speedSamples[$0]?.value() } ?? 0
+    }
+
+    var distance: Double {
+        selectedDeviceId.flatMap { metrics[$0]?.distance } ?? 0
+    }
+
+    mutating func update(deviceId: UUID, speed: Double?, distance: Double?,
+                         now: ContinuousClock.Instant = .now)
+    {
+        guard speed != nil || distance != nil else {
+            return
+        }
+        if selectedDeviceId == nil {
+            selectedDeviceId = deviceId
+        }
+        var value = metrics[deviceId] ?? .init()
+        if let speed {
+            speedSamples[deviceId] = WorkoutDeviceCyclingSpeedSample(speed: speed, time: now)
+            value.speed = speed
+        }
+        if let distance {
+            value.distance = distance
+        }
+        metrics[deviceId] = value
+    }
+
+    mutating func disconnect(deviceId: UUID) {
+        speedSamples.removeValue(forKey: deviceId)
+        metrics[deviceId]?.speed = nil
+    }
+
+    mutating func remove(deviceId: UUID) {
+        disconnect(deviceId: deviceId)
+        metrics.removeValue(forKey: deviceId)
+        if selectedDeviceId == deviceId {
+            selectedDeviceId = nil
+        }
+    }
+
+    func metricsByName(devices: [(id: UUID, name: String)], now: ContinuousClock.Instant)
+        -> [String: WorkoutDeviceCyclingMetrics]
+    {
+        var result: [String: WorkoutDeviceCyclingMetrics] = [:]
+        let devicesByName = Dictionary(grouping: devices, by: { $0.name.lowercased() })
+        for (name, devices) in devicesByName {
+            // Old imports may contain case-insensitive duplicates. Never pick an arbitrary sensor.
+            guard devices.count == 1, let device = devices.first, var value = metrics[device.id] else {
+                continue
+            }
+            value.speed = speedSamples[device.id]?.value(now: now)
+            result[name] = value
+        }
+        return result
+    }
 }
 
 private struct CyclingSpeedCadenceMeasurement {
@@ -47,6 +109,8 @@ class WorkoutDeviceCyclingSpeedCadence {
     private var measurementCharacteristic: CBCharacteristic?
     private var previousWheelRevolutions: UInt32?
     private var previousWheelRevolutionsTime: UInt16?
+    private var previousWheelMeasurementTime: ContinuousClock.Instant?
+    private var needsSpeedBaseline = true
     private let crankCadence = WorkoutDeviceCrankCadence()
     private let averageSpeed = WorkoutDeviceAverageCalculator()
     private var latestAverageSpeedUpdateTime = ContinuousClock.now
@@ -58,16 +122,21 @@ class WorkoutDeviceCyclingSpeedCadence {
         wheelCircumferenceMeters = Double(wheelCircumference) / 1000
     }
 
-    func reset() {
+    func reset(preserveDistance: Bool = false) {
         measurementCharacteristic = nil
         resetMeasurements()
         reportsWheelRevolutions = false
-        distanceMeters = 0
+        if !preserveDistance {
+            distanceMeters = 0
+            previousWheelRevolutions = nil
+            previousWheelRevolutionsTime = nil
+            previousWheelMeasurementTime = nil
+        }
     }
 
     func resetMeasurements() {
-        previousWheelRevolutions = nil
-        previousWheelRevolutionsTime = nil
+        // Keep the wheel counter for distance recovery, but never average speed across a disconnect.
+        needsSpeedBaseline = true
         crankCadence.reset()
         averageSpeed.reset()
     }
@@ -84,9 +153,10 @@ class WorkoutDeviceCyclingSpeedCadence {
         wheelCircumferenceMeters = Double(millimeters) / 1000
     }
 
-    func handleMeasurement(value: Data) throws -> (speed: Double?, cadence: Int?, distance: Double?) {
+    func handleMeasurement(value: Data, now: ContinuousClock.Instant = .now) throws
+        -> (speed: Double?, cadence: Int?, distance: Double?)
+    {
         let measurement = try CyclingSpeedCadenceMeasurement(value: value)
-        let now = ContinuousClock.now
         let cadence = crankCadence.update(revolutions: measurement.cumulativeCrankRevolutions,
                                           time: measurement.lastCrankEventTime,
                                           now: now)
@@ -102,24 +172,29 @@ class WorkoutDeviceCyclingSpeedCadence {
            let time = measurement.lastWheelEventTime
         {
             reportsWheelRevolutions = true
-            if let previousWheelRevolutions, let previousWheelRevolutionsTime {
-                var deltaRevolutions = Int(revolutions) - Int(previousWheelRevolutions)
-                if deltaRevolutions < 0 {
-                    deltaRevolutions += 4_294_967_296
+            if let previousWheelRevolutions, let previousWheelRevolutionsTime,
+               let previousWheelMeasurementTime
+            {
+                let elapsed = previousWheelMeasurementTime.duration(to: now).components
+                let elapsedSeconds = Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
+                let distance = Double(revolutions &- previousWheelRevolutions) * wheelCircumferenceMeters
+                // The event timer wraps every 64 seconds. Distance must not depend on that timer.
+                // Allow one second of delivery jitter, and reject implausible counter resets/jumps.
+                let validDistance = distance <= maximumCyclingSpeedMetersPerSecond * max(
+                    1,
+                    elapsedSeconds + 1
+                )
+                if validDistance {
+                    distanceMeters += distance
                 }
-                var deltaTime = Int(time) - Int(previousWheelRevolutionsTime)
-                if deltaTime < 0 {
-                    deltaTime += 65536
-                }
-                let deltaTimeSeconds = Double(deltaTime) / 1024
-                if deltaTimeSeconds > 0 {
-                    let distance = Double(deltaRevolutions) * wheelCircumferenceMeters
-                    let measuredSpeed = distance / deltaTimeSeconds
-                    if deltaRevolutions <= maximumWheelRevolutionsPerMeasurement,
-                       measuredSpeed <= maximumCyclingSpeedMetersPerSecond
-                    {
+                let eventSeconds = Double(time &- previousWheelRevolutionsTime) / 1024
+                if !validDistance || needsSpeedBaseline || elapsedSeconds >= 64 {
+                    averageSpeed.reset()
+                    speed = 0
+                } else if eventSeconds > 0 {
+                    let measuredSpeed = distance / eventSeconds
+                    if measuredSpeed <= maximumCyclingSpeedMetersPerSecond {
                         speed = measuredSpeed
-                        distanceMeters += distance
                     } else {
                         averageSpeed.reset()
                         speed = 0
@@ -128,6 +203,8 @@ class WorkoutDeviceCyclingSpeedCadence {
             }
             previousWheelRevolutions = revolutions
             previousWheelRevolutionsTime = time
+            previousWheelMeasurementTime = now
+            needsSpeedBaseline = false
         }
         if speed != -1.0 {
             averageSpeed.update(value: speed)

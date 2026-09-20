@@ -33,7 +33,17 @@ extension Model {
     }
 
     func disableWorkoutDevice(device: SettingsWorkoutDevice) {
+        cyclingMetricsStore.remove(deviceId: device.id)
         workoutDevices[device.id]?.stop()
+    }
+
+    func removeWorkoutDevice(device: SettingsWorkoutDevice) {
+        device.enabled = false
+        disableWorkoutDevice(device: device)
+        workoutDevices.removeValue(forKey: device.id)
+        heartRates.removeValue(forKey: device.name.lowercased())
+        runningMetrics.removeValue(forKey: device.name.lowercased())
+        database.workoutDevices.devices.removeAll { $0.id == device.id }
     }
 
     private func getWorkoutDeviceSettings(device: WorkoutDevice) -> SettingsWorkoutDevice? {
@@ -61,7 +71,7 @@ extension Model {
 
     func stopWorkoutDevices() {
         for device in workoutDevices.values {
-            device.stop()
+            device.stop(preserveCyclingDistance: true)
         }
     }
 
@@ -106,18 +116,7 @@ extension Model: WorkoutDeviceDelegate {
             self.heartRates.removeValue(forKey: deviceName)
             self.runningMetrics.removeValue(forKey: deviceName)
             if state != .connected {
-                self.cyclingSpeedSamples.removeValue(forKey: deviceName)
-                self.cyclingMetrics[deviceName]?.speed = nil
-                if self.cyclingSpeedDevice === workoutDevice {
-                    self.cyclingSpeedSample = nil
-                }
-            }
-            if state == .disconnected {
-                self.cyclingMetrics.removeValue(forKey: deviceName)
-                if self.cyclingSpeedDevice === workoutDevice {
-                    self.cyclingSpeedDevice = nil
-                    self.cyclingDistance = 0
-                }
+                self.cyclingMetricsStore.disconnect(deviceId: device.id)
             }
             if device === self.currentWorkoutDeviceSettings {
                 self.statusTopRight.workoutDeviceState = state
@@ -156,23 +155,10 @@ extension Model: WorkoutDeviceDelegate {
             guard let settings = self.getWorkoutDeviceSettings(device: device), settings.enabled else {
                 return
             }
-            let deviceName = settings.name.lowercased()
-            var metrics = self.cyclingMetrics[deviceName] ?? .init()
             if let cadence, self.setCyclingCadence(cadence, source: .cyclingSpeedCadence) {
                 self.addWorkoutCyclingCadence(cadence)
             }
-            if let speed {
-                let sample = WorkoutDeviceCyclingSpeedSample(speed: speed, time: .now)
-                self.cyclingSpeedSample = sample
-                self.cyclingSpeedDevice = device
-                self.cyclingSpeedSamples[deviceName] = sample
-                metrics.speed = speed
-            }
-            if let distance {
-                self.cyclingDistance = distance
-                metrics.distance = distance
-            }
-            self.cyclingMetrics[deviceName] = metrics
+            self.cyclingMetricsStore.update(deviceId: settings.id, speed: speed, distance: distance)
         }
     }
 

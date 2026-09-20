@@ -23,11 +23,14 @@ struct WorkoutDevicesSettingsView: View {
                                                   device: device,
                                                   status: model.statusTopRight)
                             .contextMenuDeleteButton {
-                                workoutDevices.devices.removeAll { $0.id == device.id }
+                                model.removeWorkoutDevice(device: device)
                             }
                     }
                     .onDelete { offsets in
-                        workoutDevices.devices.remove(atOffsets: offsets)
+                        let devices = offsets.map { workoutDevices.devices[$0] }
+                        for device in devices {
+                            model.removeWorkoutDevice(device: device)
+                        }
                     }
                 }
                 CreateButtonView {

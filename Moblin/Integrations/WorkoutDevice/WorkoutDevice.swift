@@ -58,9 +58,9 @@ class WorkoutDevice: NSObject, @unchecked Sendable {
         }
     }
 
-    func stop() {
+    func stop(preserveCyclingDistance: Bool = false) {
         dispatchQueue.async {
-            self.stopInternal()
+            self.stopInternal(preserveCyclingDistance: preserveCyclingDistance)
         }
     }
 
@@ -69,21 +69,21 @@ class WorkoutDevice: NSObject, @unchecked Sendable {
     }
 
     private func startInternal(deviceId: UUID?) {
+        reset(preserveCyclingDistance: deviceId != nil && self.deviceId == deviceId)
         self.deviceId = deviceId
-        reset()
         reconnect()
     }
 
-    private func stopInternal() {
-        reset()
+    private func stopInternal(preserveCyclingDistance: Bool) {
+        reset(preserveCyclingDistance: preserveCyclingDistance)
     }
 
-    private func reset() {
+    private func reset(preserveCyclingDistance: Bool) {
         centralManager = nil
         peripheral = nil
         heartRate.reset()
         cyclingPower.reset()
-        cyclingSpeedCadence.reset()
+        cyclingSpeedCadence.reset(preserveDistance: preserveCyclingDistance)
         running.reset()
         setState(state: .disconnected)
     }

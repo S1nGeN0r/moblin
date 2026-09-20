@@ -51,7 +51,7 @@ extension Model {
             teslaMedia: textEffectTeslaMedia(),
             cyclingPower: "\(cyclingPower) W",
             cyclingCadence: "\(cyclingCadence)",
-            cyclingSpeed: cyclingSpeed,
+            cyclingSpeed: cyclingMetricsStore.speed(now: timestamp),
             cyclingDistance: cyclingDistance,
             cyclingMetrics: currentCyclingMetrics,
             runningMetrics: runningMetrics,

@@ -702,7 +702,7 @@ final class Model: NSObject, ObservableObject {
     var latestCyclingPower: CyclingSampleInfo?
     var latestCyclingCadence: CyclingSampleInfo?
     var cyclingSpeed: Double {
-        cyclingMetricsStore.speed
+        cyclingMetricsStore.speed(now: .now)
     }
 
     var cyclingDistance: Double {

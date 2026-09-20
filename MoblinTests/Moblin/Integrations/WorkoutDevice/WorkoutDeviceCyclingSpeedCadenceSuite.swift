@@ -289,6 +289,54 @@ struct WorkoutDeviceCyclingSpeedCadenceSuite {
 }
 
 struct WorkoutDeviceCyclingMetricsStoreSuite {
+    @Test(arguments: [2999, 3000, 3001])
+    func genericAndNamedSpeedUseTheSameSnapshotTime(milliseconds: Int) {
+        var store = WorkoutDeviceCyclingMetricsStore()
+        let id = UUID()
+        // A historical sample makes an accidental wall-clock read fail even before the expiry boundary.
+        let sampledAt = ContinuousClock.now.advanced(by: .seconds(-60))
+        let timestamp = sampledAt.advanced(by: .milliseconds(milliseconds))
+        store.update(deviceId: id, speed: 10, distance: 100, now: sampledAt)
+        let named = store.metricsByName(devices: [(id, "Bike")], now: timestamp)
+        let speed = store.speed(now: timestamp)
+        #expect(speed == (milliseconds < 3000 ? 10 : 0))
+        #expect(named["bike"]?.speed == speed)
+        #expect(named["bike"]?.distance == store.distance)
+    }
+
+    @Test
+    func distanceOnlyUpdateDoesNotRefreshSpeed() {
+        var store = WorkoutDeviceCyclingMetricsStore()
+        let id = UUID()
+        let now = ContinuousClock.now
+        store.update(deviceId: id, speed: 10, distance: 100, now: now)
+        let later = now.advanced(by: .seconds(3))
+        store.update(deviceId: id, speed: nil, distance: 120, now: later)
+        let named = store.metricsByName(devices: [(id, "Bike")], now: later)
+        #expect(store.speed(now: later) == 0)
+        #expect(named["bike"]?.speed == 0)
+        #expect(store.distance == 120)
+        #expect(named["bike"]?.distance == 120)
+    }
+
+    @Test
+    func speedOnlyUpdateAndDisconnectUseOnlySpeedSamples() {
+        var store = WorkoutDeviceCyclingMetricsStore()
+        let id = UUID()
+        let now = ContinuousClock.now
+        store.update(deviceId: id, speed: 10, distance: nil, now: now)
+        let named = store.metricsByName(devices: [(id, "Bike")], now: now)
+        #expect(store.speed(now: now) == 10)
+        #expect(named["bike"]?.speed == 10)
+        #expect(named["bike"]?.distance == nil)
+        store.disconnect(deviceId: id)
+        #expect(store.speed(now: now) == 0)
+        #expect(store.metricsByName(devices: [(id, "Bike")], now: now)["bike"]?.speed == nil)
+        store.update(deviceId: id, speed: 5, distance: nil, now: now)
+        #expect(store.speed(now: now) == 5)
+        #expect(store.metricsByName(devices: [(id, "Bike")], now: now)["bike"]?.speed == 5)
+    }
+
     @Test
     func genericMetricsKeepTheSameSensorAcrossDisconnects() {
         var store = WorkoutDeviceCyclingMetricsStore()
@@ -300,7 +348,7 @@ struct WorkoutDeviceCyclingMetricsStoreSuite {
         store.disconnect(deviceId: first)
         store.update(deviceId: second, speed: 20, distance: 920)
         #expect(store.distance == 100)
-        #expect(store.speed == 0)
+        #expect(store.speed(now: .now) == 0)
         store.update(deviceId: first, speed: 0, distance: 120)
         #expect(store.distance == 120)
         store.remove(deviceId: first)

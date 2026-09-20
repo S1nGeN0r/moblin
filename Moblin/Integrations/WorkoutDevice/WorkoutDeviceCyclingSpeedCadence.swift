@@ -27,8 +27,8 @@ struct WorkoutDeviceCyclingMetricsStore {
     private var speedSamples: [UUID: WorkoutDeviceCyclingSpeedSample] = [:]
     private var selectedDeviceId: UUID?
 
-    var speed: Double {
-        selectedDeviceId.flatMap { speedSamples[$0]?.value() } ?? 0
+    func speed(now: ContinuousClock.Instant) -> Double {
+        selectedDeviceId.flatMap { speedSamples[$0]?.value(now: now) } ?? 0
     }
 
     var distance: Double {
@@ -47,7 +47,6 @@ struct WorkoutDeviceCyclingMetricsStore {
         var value = metrics[deviceId] ?? .init()
         if let speed {
             speedSamples[deviceId] = WorkoutDeviceCyclingSpeedSample(speed: speed, time: now)
-            value.speed = speed
         }
         if let distance {
             value.distance = distance
@@ -57,7 +56,6 @@ struct WorkoutDeviceCyclingMetricsStore {
 
     mutating func disconnect(deviceId: UUID) {
         speedSamples.removeValue(forKey: deviceId)
-        metrics[deviceId]?.speed = nil
     }
 
     mutating func remove(deviceId: UUID) {
